@@ -1,14 +1,33 @@
 import React, { Component } from 'react';
 import './App.css';
-import { DragDropContext } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import initialData from './initial-data'
 import Column from './components/Column/Column'
 import styled from 'styled-components';
+import RoundBoxColumn from './components/RoundBoxColumn/RoundBoxColumn'
+
+const AllContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
 
 const Container = styled.div`
   display: flex;
   justify-content: space-between;
 `;
+
+class InnerList extends React.Component {
+  shouldComponentUpdate(nextProps) {
+    if (nextProps.column === this.props.column && nextProps.taskMap === this.props.taskMap && nextProps.index === this.props.index) return false;
+    return true;
+  }
+  render() {
+    const { column, taskMap, index } = this.props;
+    const tasks = column.taskIds.map(taskId => taskMap[taskId]);
+    return <Column column={column} tasks={tasks} index={index} />
+  }
+}
+
 
 class App extends Component {
   state = initialData;
@@ -28,11 +47,24 @@ class App extends Component {
     document.body.style.color = 'inherit';
     document.body.style.backgroundColor = 'inherit';
 
-    const { destination, source, draggableId } = result;
+    const { destination, source, draggableId, type } = result;
 
     if (!destination) return;
 
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+
+    if (type === 'column') {
+      const newColumnOrder = [...this.state.columnOrder];
+      newColumnOrder.splice(source.index, 1);
+      newColumnOrder.splice(destination.index, 0, draggableId);
+
+      const newState = {
+        ...this.state,
+        columnOrder: newColumnOrder
+      }
+      this.setState(newState)
+      return;
+    }
 
     const start = this.state.columns[source.droppableId];
     const finish = this.state.columns[destination.droppableId];
@@ -88,6 +120,7 @@ class App extends Component {
   }
 
   render() {
+    console.log('Render!')
     return (
       <div className="container">
         <DragDropContext
@@ -95,14 +128,29 @@ class App extends Component {
           onDragUpdate={this.onDragUpdate}
           onDragEnd={this.onDragEnd}
         >
-          <Container>
-            {this.state.columnOrder.map(columnId => {
-              const column = this.state.columns[columnId];
-              const tasks = column.taskIds.map(taskId => this.state.tasks[taskId]);
+          <Droppable droppableId="all-columns" direction="horizontal" type="column">
+            {provided => (
+              <AllContainer {...provided.droppableProps} ref={provided.innerRef}>
+                <Container >
+                  {this.state.columnOrder.map((columnId, index) => {
+                    const column = this.state.columns[columnId];
 
-              return <Column key={column.id} column={column} tasks={tasks} />
-            })}
-          </Container>
+
+                    return <InnerList key={column.id} column={column} taskMap={this.state.tasks} index={index} />
+                  })}
+                </Container>
+                <Container>
+                  {this.state.columnHorizontalOrder.map((columnId) => {
+                    const column = this.state.columns[columnId];
+                    const tasks = column.taskIds.map(taskId => this.state.tasks[taskId]);
+
+                    return <RoundBoxColumn key={column.id} column={column} tasks={tasks} />
+                  })}
+                </Container>
+                {provided.placeholder}
+              </AllContainer>
+            )}
+          </Droppable>
         </DragDropContext>
       </div>
 
