@@ -4,6 +4,9 @@ import { Droppable } from 'react-beautiful-dnd'
 import Task from '../Task/Task';
 
 const Container = styled.div`
+    flex-basis: 30%;
+    display: flex;
+    flex-direction: column;
     margin: 8px;
     border: 1px solid lightgrey;
     border-radius: 2px;
@@ -12,9 +15,11 @@ const Title = styled.h3`
     padding: 8px;
 `;
 const TaskList = styled.div`
+    flex: 1;
     padding: 8px;
     background-color: ${props => (props.isDraggingOver ? 'skyblue' : '#fff')};
     transition: background-color .2s ease;
+    min-height: 100px;
 `;
 
 function Column(props) {

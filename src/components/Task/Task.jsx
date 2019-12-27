@@ -17,6 +17,7 @@ const Container = styled.div`
 
 const Handle = styled.div`
     display: inline-block;
+    margin-left: 1.5rem;
 `;
 
 function Task(props) {
